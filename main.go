@@ -13,7 +13,6 @@ import (
 	"time"
 )
 
-
 func init() {
 	flag.StringVar(&token, "t", "", "Bot Token")
 	flag.Parse()
@@ -28,8 +27,6 @@ func main() {
 		fmt.Println("No token provided. Please run: nutbot -t <bot token>")
 		return
 	}
-
-
 
 	// Create a new Discord session using the provided bot token.
 	dg, err := discordgo.New("Bot " + token)
@@ -58,7 +55,7 @@ func main() {
 	}
 
 	// Wait here until CTRL-C or other term signal is received.
-	fmt.Println("Airhorn is now running.  Press CTRL-C to exit.")
+	fmt.Println("nutbot is now running.  Press CTRL-C to exit.")
 	sc := make(chan os.Signal, 1)
 	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
 	<-sc
@@ -66,7 +63,7 @@ func main() {
 	// Cleanly close down the Discord session.
 	err = dg.Close()
 	if err != nil {
-		return 
+		return
 	}
 }
 
@@ -77,7 +74,7 @@ func ready(s *discordgo.Session, event *discordgo.Ready) {
 	// Set the playing status.
 	err := s.UpdateGameStatus(0, "Grandpa is back!")
 	if err != nil {
-		return 
+		return
 	}
 }
 
@@ -113,14 +110,13 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			if vs.UserID == m.Author.ID {
 				err := loadSound(soundname)
 				if err != nil {
-					return 
+					return
 				}
 				err = playSound(s, g.ID, vs.ChannelID)
 				if err != nil {
 					fmt.Println("Error playing sound:", err)
 				}
 				clearBuffer()
-
 
 				return
 			}
@@ -138,7 +134,7 @@ func guildCreate(s *discordgo.Session, event *discordgo.GuildCreate) {
 
 	for _, channel := range event.Guild.Channels {
 		if channel.ID == event.Guild.ID {
-			_, _ = s.ChannelMessageSend(channel.ID, "Airhorn is ready! Type !airhorn while in a voice channel to play a sound.")
+			_, _ = s.ChannelMessageSend(channel.ID, "nutbot is ready!")
 			return
 		}
 	}
@@ -188,11 +184,13 @@ func loadSound(soundname string) error {
 		buffer = append(buffer, InBuf)
 	}
 }
-//funtion to clear buffer, so that it can be used again
-//this is needed because the buffer is global and will be used again
-func clearBuffer(){
+
+// funtion to clear buffer, so that it can be used again
+// this is needed because the buffer is global and will be used again
+func clearBuffer() {
 	buffer = nil
 }
+
 // playSound plays the current buffer to the provided channel.
 func playSound(s *discordgo.Session, guildID, channelID string) (err error) {
 
