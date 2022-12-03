@@ -117,6 +117,8 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 					fmt.Println("Error playing sound:", err)
 				}
 				clearBuffer()
+				//sleep for 1 second to prevent spamming
+				time.Sleep(1 * time.Second)
 
 				return
 			}
