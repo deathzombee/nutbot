@@ -87,40 +87,57 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if m.Author.ID == s.State.User.ID {
 		return
 	}
+	commands := []string{}
+	file, err := os.Open("commands")
+	if err != nil {
+		fmt.Println("Error opening commands file :", err)
+		return
+	}
+	defer file.Close()
+	for {
+		var command string
+		_, err = fmt.Fscanln(file, &command)
+		if err == io.EOF {
+			break
+		}
+		commands = append(commands, command)
+	}
 	//check if the message has prefix that is either !nut or !airhorn
-	if strings.HasPrefix(m.Content, "!nut") || strings.HasPrefix(m.Content, "!airhorn") {
-		//store prefix in variable without first character
-		soundname := m.Content[1:]
-		// Find the channel that the message came from.
-		c, err := s.State.Channel(m.ChannelID)
-		if err != nil {
-			// Could not find channel.
-			return
-		}
+	for _, prefix := range commands {
+		if strings.HasPrefix(m.Content, prefix) {
+			//store prefix in variable without first character
+			soundname := m.Content[1:]
+			// Find the channel that the message came from.
+			c, err := s.State.Channel(m.ChannelID)
+			if err != nil {
+				// Could not find channel.
+				return
+			}
 
-		// Find the guild for that channel.
-		g, err := s.State.Guild(c.GuildID)
-		if err != nil {
-			// Could not find guild.
-			return
-		}
+			// Find the guild for that channel.
+			g, err := s.State.Guild(c.GuildID)
+			if err != nil {
+				// Could not find guild.
+				return
+			}
 
-		// Look for the message sender in that guild's current voice states.
-		for _, vs := range g.VoiceStates {
-			if vs.UserID == m.Author.ID {
-				err := loadSound(soundname)
-				if err != nil {
+			// Look for the message sender in that guild's current voice states.
+			for _, vs := range g.VoiceStates {
+				if vs.UserID == m.Author.ID {
+					err := loadSound(soundname)
+					if err != nil {
+						return
+					}
+					err = playSound(s, g.ID, vs.ChannelID)
+					if err != nil {
+						fmt.Println("Error playing sound:", err)
+					}
+					clearBuffer()
+					//sleep for 1 second to prevent spamming
+					time.Sleep(1 * time.Second)
+
 					return
 				}
-				err = playSound(s, g.ID, vs.ChannelID)
-				if err != nil {
-					fmt.Println("Error playing sound:", err)
-				}
-				clearBuffer()
-				//sleep for 1 second to prevent spamming
-				time.Sleep(1 * time.Second)
-
-				return
 			}
 		}
 	}
@@ -199,12 +216,10 @@ func playSound(s *discordgo.Session, guildID, channelID string) (err error) {
 	// Join the provided voice channel.
 	vc, err := s.ChannelVoiceJoin(guildID, channelID, false, true)
 	if err != nil {
+
 		return err
 	}
-
-	// Sleep for a specified amount of time before playing the sound
-	time.Sleep(250 * time.Millisecond)
-
+	// if there are issues add a wait here of < 250ms
 	// Start speaking.
 	err = vc.Speaking(true)
 	if err != nil {
@@ -219,6 +234,7 @@ func playSound(s *discordgo.Session, guildID, channelID string) (err error) {
 	// Stop speaking
 	err = vc.Speaking(false)
 	if err != nil {
+
 		return err
 	}
 
