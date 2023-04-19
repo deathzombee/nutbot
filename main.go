@@ -216,12 +216,10 @@ func playSound(s *discordgo.Session, guildID, channelID string) (err error) {
 	// Join the provided voice channel.
 	vc, err := s.ChannelVoiceJoin(guildID, channelID, false, true)
 	if err != nil {
+
 		return err
 	}
-
-	// Sleep for a specified amount of time before playing the sound
-	time.Sleep(250 * time.Millisecond)
-
+	// if there are issues add a wait here of < 250ms
 	// Start speaking.
 	err = vc.Speaking(true)
 	if err != nil {
@@ -236,6 +234,7 @@ func playSound(s *discordgo.Session, guildID, channelID string) (err error) {
 	// Stop speaking
 	err = vc.Speaking(false)
 	if err != nil {
+
 		return err
 	}
 
